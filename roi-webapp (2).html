@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Presentation Update Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+        }
+        .code-window {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .code-window::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .code-window::-webkit-scrollbar-thumb {
+            background-color: #4a5568;
+            border-radius: 6px;
+        }
+        .code-window::-webkit-scrollbar-track {
+            background-color: #2d3748;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">ROI Presentation Update Tool</h1>
+        
+        <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md">
+            <h3 class="font-bold text-lg mb-3 text-blue-800">Templates:</h3>
+            <ul class="list-disc list-inside space-y-2">
+                <li>
+                    <a href="https://docs.google.com/presentation/d/14mq_4uuTYgwAYT2Lpit0FP68bgV3VxB_6PsbV1i83II/edit#slide=id.g230f368dba9_0_5" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="text-blue-600 hover:text-blue-800 underline">
+                        ROI Presentation Template
+                    </a>
+                </li>
+                <li>
+                    <a href="https://docs.google.com/spreadsheets/d/1eu9euNuKeLli9Xe-ICDUkOzu6wyLWg9iENBWMZg6va8/edit?gid=0#gid=0" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="text-blue-600 hover:text-blue-800 underline">
+                        ROI Calculator Template
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mb-6">
+            <label for="slidesUrl" class="block mb-2 font-semibold text-gray-700">Insert Google Slides ROI Presentation URL:</label>
+            <input type="text" id="slidesUrl" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://docs.google.com/presentation/d/...">
+        </div>
+        
+        <div class="mb-6">
+            <label for="sheetsUrl" class="block mb-2 font-semibold text-gray-700">Insert Google Sheets ROI Calculator URL:</label>
+            <input type="text" id="sheetsUrl" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://docs.google.com/spreadsheets/d/...">
+        </div>
+        
+        <button id="generateBtn" class="w-full bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Run & Provide Script</button>
+        
+        <div class="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-md">
+            <h3 class="font-bold text-lg mb-3 text-yellow-800">Instructions:</h3>
+            <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                <li>Provide both the Slides ROI Presentation and URL AND the Google Sheets ROI Calculator ROI into the boxes above.</li>
+                <li>Click "Run & Provide Script"</li>
+                <li>After the code runs, click "Copy Code". This adds it to your clipboard.</li>
+                <li>Go back to your Google Slides ROI Presentation document, and then go to: Extensions > Apps Script. Replace the embedded script with what you've copied, overwriting it.</li>
+                <li>Click "Run". This will update your presentation with the ROI Calculator data!</li>
+            </ol>
+        </div>
+        
+        <div id="output" class="mt-8 hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Generated Script:</h2>
+            <div class="code-window mb-4 shadow-inner">
+                <code id="scriptOutput"></code>
+            </div>
+            <button id="copyBtn" class="w-full bg-green-500 text-white px-6 py-3 rounded-md hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 mb-6">Copy Code</button>
+        </div>
+    </div>
+
+    <script>
+        const baseScript = `function updateSlideVariables() {
+  // Insert the Google Slides URL below
+  // Make sure the URL ends in /edit, for example: https://docs.google.com/presentation/d/14mq_4uuTYgwAYT2Lpit0FP68bgV3VxB_6PsbV1i83II/edit?usp=sharing
+  var slidesURL = "INSERT URL HERE";
+  var presentation = SlidesApp.openByUrl(slidesURL);
+  var slides = presentation.getSlides();
+
+  // Insert the Google Sheets ID below, found in the URL after /d/ and before /edit
+  // For example, the ID for https://docs.google.com/spreadsheets/d/17_d77VPOFaPDOYV0FNY5gh7jwxxs1CMfHnnDc9WRiDY/edit#gid=0 is 17_d77VPOFaPDOYV0FNY5gh7jwxxs1CMfHnnDc9WRiDY
+  var sheetId = 'INSERT ID HERE';
+  var sheet = SpreadsheetApp.openById(sheetId).getSheetByName("Slide Variables");
+  var range = sheet.getRange('A2:B34'); // change to the range you need
+  var data = range.getValues();
+  var range2 = sheet.getRange('A1:B1');
+  var data2 = range2.getValues();
+  var range3 = sheet.getRange('A39:B47');
+  var data3 = range3.getValues();
+  var range4 = sheet.getRange('A35:B38');
+  var data4 = range4.getValues();
+
+  var chartSheet = SpreadsheetApp.openById(sheetId).getSheetByName("Charts");
+  var charts = chartSheet.getCharts();
+  var engChart = charts[0];
+  var taChart = charts[1];
+  var pieChart = charts[2];
+  var engineeringSlide = slides[3];
+  var taSlide = slides[4];
+  var pieSlide = slides[7];
+  var engPageElements = engineeringSlide.getPageElements();
+  var taPageElements = taSlide.getPageElements();
+  var piePageElements = pieSlide.getPageElements();
+
+  engPageElements.forEach(function(pageElement){
+   if(pageElement.getPageElementType() == "SHAPE"){
+   if(pageElement.asShape().getShapeType() == "RECTANGLE"){
+      
+     pageElement.asShape().replaceWithSheetsChart(engChart);
+     }}});
+
+  taPageElements.forEach(function(pageElement){
+   if(pageElement.getPageElementType() == "SHAPE"){
+   if(pageElement.asShape().getShapeType() == "RECTANGLE"){
+      
+     pageElement.asShape().replaceWithSheetsChart(taChart);
+     }}});
+
+  piePageElements.forEach(function(pageElement){
+   if(pageElement.getPageElementType() == "SHAPE"){
+   if(pageElement.asShape().getShapeType() == "BEVEL"){
+      
+     pageElement.asShape().replaceWithSheetsChart(pieChart);
+     }}});
+
+
+  data.forEach(function(row) {
+    var templateVariable = row[0]; // First column contains variable names
+    var templateValue = row[1];
+    var templateValueFixed = templateValue.toFixed(0); // Second column contains values
+    console.log(\`replacing \${templateVariable} with \${templateValueFixed}\`);
+    presentation.replaceAllText(templateVariable, templateValueFixed);
+  });
+
+  data2.forEach(function(row) {
+    var templateVariable = row[0]; // First column contains variable names
+    var templateValue = row[1];
+    console.log(\`replacing \${templateVariable} with \${templateValue}\`);
+    presentation.replaceAllText(templateVariable, templateValue);
+  });
+  
+  data3.forEach(function(row) {
+    var templateVariable = row[0]; // First column contains variable names
+    var templateValue = row[1];
+    var numberToCurrency = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'});
+    var templateValueCurrency = numberToCurrency.format(templateValue);
+    console.log(\`replacing \${templateVariable} with \${templateValueCurrency}\`);
+    presentation.replaceAllText(templateVariable, templateValueCurrency);
+  });
+
+  data4.forEach(function(row) {
+    var templateVariable = row[0]; // First column contains variable names
+    var templateValue = row[1];
+    var templateValueFixed = templateValue.toFixed(1); // Second column contains values
+    console.log(\`replacing \${templateVariable} with \${templateValueFixed}\`);
+    presentation.replaceAllText(templateVariable, templateValueFixed);
+  });
+}`;
+
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const slidesUrl = document.getElementById('slidesUrl').value;
+            const sheetsUrl = document.getElementById('sheetsUrl').value;
+            
+            if (!slidesUrl || !sheetsUrl) {
+                alert('Please enter both URLs');
+                return;
+            }
+            
+            const sheetsId = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
+            
+            let updatedScript = baseScript.replace('INSERT URL HERE', slidesUrl);
+            updatedScript = updatedScript.replace('INSERT ID HERE', sheetsId);
+            
+            document.getElementById('scriptOutput').textContent = updatedScript;
+            document.getElementById('output').classList.remove('hidden');
+        });
+        
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const scriptOutput = document.getElementById('scriptOutput');
+            const range = document.createRange();
+            range.selectNode(scriptOutput);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            alert('Script copied to clipboard!');
+        });
+    </script>
+</body>
+</html>
